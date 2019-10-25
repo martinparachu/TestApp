@@ -1,0 +1,64 @@
+#!/usr/bin/env groovy
+
+// Configure using microservice-pipelines and using "master" branch
+@Library("msss@master") _
+
+// Entry point into microservice-pipelines
+jenkinsJob.call()
+
+
+pipeline {
+    agent { label 'master' }
+		environment {
+			def mailRecipients = "<coma separated email list to be used in email step at end script"
+  		 }
+  		 
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/TEST*.xml'
+                    archiveArtifacts 'target/*jar'
+                }
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+            }
+        }
+    }
+    post
+		{
+        success {
+            echo "Sending Success Build Status email............"
+					emailext attachLog: true, attachmentsPattern: 'generatedFile.txt',
+						mimeType: 'text/html',
+						subject: "SUCCESS: Jenkins Build ${currentBuild.currentResult}: Job ${env.JOB_NAME}",
+						to: "${mailRecipients}",
+						replyTo: "${mailRecipients}",
+						body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}\n More info at: ${env.BUILD_URL}",
+						recipientProviders: [developers(), requestor()]
+				}
+		failure {
+            echo "Sending FAILED Build Status email............"
+					emailext attachLog: true, attachmentsPattern: 'generatedFile.txt',
+						mimeType: 'text/html',
+						subject: "FAILED: Jenkins Build ${currentBuild.currentResult}: Job ${env.JOB_NAME}",
+						to: "${mailRecipients}",
+						replyTo: "${mailRecipients}",
+						body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}. \n More info at: ${env.BUILD_URL}",
+						recipientProviders: [developers(), requestor()]
+			}
+		}
+    
+    
+}
