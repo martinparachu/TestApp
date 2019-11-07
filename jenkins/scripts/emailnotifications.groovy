@@ -2,7 +2,7 @@
 
 def emailnotifyok() {
 
-        
+        echo "Sending Success Status email............"
 	    
 }
 
