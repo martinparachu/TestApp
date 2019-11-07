@@ -1,8 +1,7 @@
-#!/usr/bin/env groovy
 
 def emailnotifyok() {
 
-        echo "Sending Success Status email............"
+        
 	    
 }
 
