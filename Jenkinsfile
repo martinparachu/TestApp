@@ -4,4 +4,4 @@
 @Library("microservice-pipelines@master") _
 
 // Entry point into microservice-pipelines
-jenkinsJob3.call()
+jenkinsJob.call()
